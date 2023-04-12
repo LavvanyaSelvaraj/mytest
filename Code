@@ -1,28 +1,68 @@
-def test_initial_capacity():
-    store = InMemoryStore(10)
-    assert len(store.songs) == 0
-    assert len(store.user_songs_map) == 0
-    assert store.capacity == 10
+import unittest
 
-def test_store_and_fetch():
-    store = InMemoryStore(10)
-    store.add_song_user_pair("song1", "user1")
-    store.add_song_user_pair("song2", "user1")
-    store.add_song_user_pair("song3", "user2")
-    assert store.get_recently_played_songs("user1") == ["song2", "song1"]
-    assert store.get_recently_played_songs("user2") == ["song3"]
+from recently_played_store import RecentlyPlayedStore
 
-def test_store_full():
-    store = InMemoryStore(2)
-    store.add_song_user_pair("song1", "user1")
-    store.add_song_user_pair("song2", "user1")
-    store.add_song_user_pair("song3", "user1")
-    assert store.get_recently_played_songs("user1") == ["song3", "song2"]
 
-def test_store_N_songs_per_user():
-    store = InMemoryStore(10)
-    store.add_song_user_pair("song1", "user1")
-    store.add_song_user_pair("song2", "user1")
-    store.add_song_user_pair("song3", "user1")
-    store.add_song_user_pair("song4", "user1")
-    assert store.get_recently_played_songs("user1") == ["song4", "song3", "song2", "song1"]
+class RecentlyPlayedStoreTests(unittest.TestCase):
+    
+    def test_initial_capacity(self):
+        store = RecentlyPlayedStore(capacity=3)
+        self.assertEqual(len(store.store), 3)
+    
+    def test_add_song_for_user(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 1)
+    
+    def test_add_multiple_songs_for_user(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        store.add_song_for_user('user1', 'song2')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 2)
+    
+    def test_add_songs_for_multiple_users(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        store.add_song_for_user('user2', 'song2')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 1)
+        self.assertEqual(len(store.get_songs_for_user('user2')), 1)
+    
+    def test_least_recently_played_song_removed(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        store.add_song_for_user('user1', 'song2')
+        store.add_song_for_user('user1', 'song3')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
+        store.add_song_for_user('user1', 'song4')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
+        self.assertNotIn('song1', store.get_songs_for_user('user1'))
+    
+    def test_least_recently_played_song_removed_for_multiple_users(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        store.add_song_for_user('user1', 'song2')
+        store.add_song_for_user('user2', 'song3')
+        store.add_song_for_user('user2', 'song4')
+        store.add_song_for_user('user1', 'song5')
+        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
+        self.assertEqual(len(store.get_songs_for_user('user2')), 2)
+        self.assertNotIn('song1', store.get_songs_for_user('user1'))
+        self.assertNotIn('song3', store.get_songs_for_user('user2'))
+    
+    def test_recently_played_songs_returned(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        store.add_song_for_user('user1', 'song2')
+        store.add_song_for_user('user1', 'song3')
+        self.assertEqual(store.get_songs_for_user('user1'), ['song3', 'song2', 'song1'])
+    
+    def test_recently_played_songs_returned_before_capacity_reached(self):
+        store = RecentlyPlayedStore(capacity=3)
+        store.add_song_for_user('user1', 'song1')
+        self.assertEqual(store.get_songs_for_user('user1'), ['song1'])
+        store.add_song_for_user('user1', 'song2')
+        self.assertEqual(store.get_songs_for_user('user1'), ['song2', 'song1'])
+
+
+if __name__ == '__main__':
+    unittest.main
