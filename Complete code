@@ -2,38 +2,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 public class RecentlyPlayedSongsStore {
     private int capacity;
     private Map<String, List<String>> songMap;
     private Map<String, Integer> countMap;
-
     public RecentlyPlayedSongsStore(int capacity) {
         this.capacity = capacity;
         this.songMap = new HashMap<>();
         this.countMap = new HashMap<>();
     }
-
     public synchronized void addSong(String user, String song) {
         List<String> songList = songMap.getOrDefault(user, new ArrayList<>());
         int count = countMap.getOrDefault(user, 0);
-
         if (songList.contains(song)) {
-            // If the song is already in the list, remove it to make room for a new song
             songList.remove(song);
         } else if (songList.size() >= capacity) {
-            // If the list is at full capacity, remove the least recently played song
             String leastRecentlyPlayedSong = songList.remove(0);
             countMap.put(user, count - 1);
         }
-
-        // Add the new song to the end of the list and increment its count
         songList.add(song);
         countMap.put(user, count + 1);
-
         songMap.put(user, songList);
     }
-
     public synchronized List<String> getRecentSongs(String user) {
         return songMap.getOrDefault(user, new ArrayList<>());
     }
