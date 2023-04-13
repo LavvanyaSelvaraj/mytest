@@ -1,68 +1,27 @@
-import unittest
-
-from recently_played_store import RecentlyPlayedStore
-
-
-class RecentlyPlayedStoreTests(unittest.TestCase):
-    
-    def test_initial_capacity(self):
-        store = RecentlyPlayedStore(capacity=3)
-        self.assertEqual(len(store.store), 3)
-    
-    def test_add_song_for_user(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 1)
-    
-    def test_add_multiple_songs_for_user(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        store.add_song_for_user('user1', 'song2')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 2)
-    
-    def test_add_songs_for_multiple_users(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        store.add_song_for_user('user2', 'song2')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 1)
-        self.assertEqual(len(store.get_songs_for_user('user2')), 1)
-    
-    def test_least_recently_played_song_removed(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        store.add_song_for_user('user1', 'song2')
-        store.add_song_for_user('user1', 'song3')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
-        store.add_song_for_user('user1', 'song4')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
-        self.assertNotIn('song1', store.get_songs_for_user('user1'))
-    
-    def test_least_recently_played_song_removed_for_multiple_users(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        store.add_song_for_user('user1', 'song2')
-        store.add_song_for_user('user2', 'song3')
-        store.add_song_for_user('user2', 'song4')
-        store.add_song_for_user('user1', 'song5')
-        self.assertEqual(len(store.get_songs_for_user('user1')), 3)
-        self.assertEqual(len(store.get_songs_for_user('user2')), 2)
-        self.assertNotIn('song1', store.get_songs_for_user('user1'))
-        self.assertNotIn('song3', store.get_songs_for_user('user2'))
-    
-    def test_recently_played_songs_returned(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        store.add_song_for_user('user1', 'song2')
-        store.add_song_for_user('user1', 'song3')
-        self.assertEqual(store.get_songs_for_user('user1'), ['song3', 'song2', 'song1'])
-    
-    def test_recently_played_songs_returned_before_capacity_reached(self):
-        store = RecentlyPlayedStore(capacity=3)
-        store.add_song_for_user('user1', 'song1')
-        self.assertEqual(store.get_songs_for_user('user1'), ['song1'])
-        store.add_song_for_user('user1', 'song2')
-        self.assertEqual(store.get_songs_for_user('user1'), ['song2', 'song1'])
-
-
-if __name__ == '__main__':
-    unittest.main
+import org.junit.Assert;
+import org.junit.Test;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+public class RecentlyPlayedSongsStoreTest {
+    public void testRecentlyPlayedSongsStore() {
+        RecentlyPlayedSongsStore store = new RecentlyPlayedSongsStore(3);
+        WebDriver driver = new ChromeDriver();
+        driver.navigate().to("https://example.com");
+        playSong(driver, "S1");
+        playSong(driver, "S2");
+        playSong(driver, "S3");
+        Assert.assertEquals(store.getRecentSongs("user1"), Arrays.asList("S3", "S2", "S1"));
+        playSong(driver, "S4");
+        Assert.assertEquals(store.getRecentSongs("user1"), Arrays.asList("S4", "S3", "S2"));
+        playSong(driver, "S2");
+        Assert.assertEquals(store.getRecentSongs("user1"), Arrays.asList("S2", "S4", "S3"));
+        playSong(driver, "S1");
+        Assert.assertEquals(store.getRecentSongs("user1"), Arrays.asList("S1", "S2", "S4"));
+        driver.quit();
+    }
+    private void playSong(WebDriver driver, String songName) {
+        driver.findElement(By.xpath("//button[contains(text(), '" + songName + "')]")).click();
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[contains(text(), 'Now Playing: " + songName + "')]")));
+    }
+}
